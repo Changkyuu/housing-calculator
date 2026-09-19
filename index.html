@@ -1,0 +1,521 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#0b0f14" />
+  <meta name="description" content="전세·반전세·월세 매물의 월 주거비를 비교하는 무료 계산기" />
+  <title>신혼집 주거비 비교 계산기</title>
+  <style>
+    :root{
+      --bg:#090c10;
+      --panel:#11161d;
+      --panel2:#151b24;
+      --line:#28313d;
+      --text:#f3f6f9;
+      --muted:#98a3b1;
+      --blue:#72b7ff;
+      --green:#4ade80;
+      --yellow:#facc15;
+      --red:#fb7185;
+      --shadow:0 18px 50px rgba(0,0,0,.28);
+      --radius:20px;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      background:
+        radial-gradient(circle at 20% -10%,rgba(63,131,248,.15),transparent 30%),
+        linear-gradient(180deg,#090c10,#0d1117 55%,#090c10);
+      color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Pretendard,"Noto Sans KR",sans-serif;
+    }
+    button,input{font:inherit}
+    .app{max-width:1200px;margin:0 auto;padding:28px 18px 56px}
+    header{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:20px}
+    h1{font-size:clamp(26px,5vw,38px);letter-spacing:-1.2px;margin:0 0 8px}
+    .lead{margin:0;color:var(--muted);font-size:14px;line-height:1.6}
+    .tag{font-size:12px;color:#cbd5e1;border:1px solid var(--line);background:#11161d;padding:7px 10px;border-radius:999px;white-space:nowrap}
+    .global{
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:12px;
+      margin-bottom:18px;
+    }
+    .panel{
+      background:linear-gradient(180deg,rgba(21,27,36,.96),rgba(15,20,27,.96));
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+    }
+    .global .panel{padding:16px}
+    .label{font-size:12px;color:var(--muted);margin-bottom:7px}
+    .money-input,.rate-input{
+      display:flex;align-items:center;gap:6px;
+      background:#0b1016;border:1px solid #323d4b;border-radius:12px;padding:0 10px;
+    }
+    .money-input input,.rate-input input{
+      width:100%;min-width:0;border:0;outline:0;background:transparent;color:#fff;
+      font-size:20px;font-weight:750;padding:10px 0;text-align:right;
+    }
+    .money-input span,.rate-input span{font-size:12px;color:var(--muted);white-space:nowrap}
+    .usable{
+      margin-top:18px;padding:18px 20px;
+      display:flex;justify-content:space-between;align-items:center;gap:12px;
+    }
+    .usable .big{font-size:24px;font-weight:800;color:var(--green);white-space:nowrap}
+    .usable .desc{font-size:13px;color:var(--muted);line-height:1.5}
+
+    .section-title{display:flex;justify-content:space-between;align-items:end;gap:12px;margin:28px 2px 12px}
+    .section-title h2{font-size:20px;margin:0}
+    .section-title p{font-size:12px;color:var(--muted);margin:0}
+
+    .properties{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+    .property{padding:18px;position:relative;overflow:hidden}
+    .property.best{border-color:rgba(74,222,128,.65);box-shadow:0 0 0 1px rgba(74,222,128,.18),var(--shadow)}
+    .prop-top{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:14px}
+    .prop-name{
+      border:0;border-bottom:1px dashed #536170;background:transparent;color:#fff;
+      font-size:18px;font-weight:800;width:110px;outline:0;padding:2px 0;
+    }
+    .status{font-size:11px;padding:6px 9px;border-radius:999px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+    .status.ok{color:var(--green);border-color:rgba(74,222,128,.35);background:rgba(74,222,128,.08)}
+    .status.over{color:var(--red);border-color:rgba(251,113,133,.35);background:rgba(251,113,133,.08)}
+
+    .mode{
+      display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:#0b1016;border:1px solid var(--line);
+      padding:4px;border-radius:12px;margin-bottom:14px;
+    }
+    .mode button{
+      border:0;background:transparent;color:var(--muted);padding:8px 6px;border-radius:9px;font-size:12px;cursor:pointer;
+    }
+    .mode button.active{background:#273140;color:#fff}
+    .fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .field label{display:block;font-size:11px;color:var(--muted);margin:0 0 6px}
+    .field .money-input input,.field .rate-input input{font-size:15px;font-weight:650;padding:8px 0}
+    .calc-box{
+      margin-top:14px;background:#0b1016;border:1px solid var(--line);border-radius:14px;padding:13px;
+      display:grid;grid-template-columns:1fr 1fr;gap:10px;
+    }
+    .metric .m-label{font-size:11px;color:var(--muted)}
+    .metric .m-value{font-size:16px;font-weight:750;margin-top:4px}
+    .metric.total{grid-column:1/-1;border-top:1px solid var(--line);padding-top:11px;display:flex;justify-content:space-between;align-items:flex-end;gap:10px}
+    .metric.total .m-value{font-size:25px}
+    .metric.total .m-value.ok{color:var(--green)}
+    .metric.total .m-value.over{color:var(--red)}
+    .budgetbar{height:8px;background:#070a0e;border-radius:999px;overflow:hidden;margin-top:11px;border:1px solid #202733}
+    .budgetbar>div{height:100%;width:0;background:linear-gradient(90deg,var(--green),var(--yellow),var(--red));transition:width .25s}
+    .best-badge{position:absolute;right:-35px;top:16px;transform:rotate(35deg);background:var(--green);color:#07110a;font-size:10px;font-weight:850;padding:5px 38px;display:none}
+    .property.best .best-badge{display:block}
+
+    .dash{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+    .chart-panel{padding:18px}
+    .chart-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:12px}
+    .chart-head h3{margin:0;font-size:17px}
+    .chart-head p{margin:5px 0 0;color:var(--muted);font-size:12px}
+    canvas{display:block;width:100%;height:320px;background:linear-gradient(180deg,rgba(4,7,10,.38),rgba(4,7,10,.08));border-radius:14px}
+    .legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;color:var(--muted);font-size:12px}
+    .dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:5px}
+    .dot.a{background:#72b7ff}.dot.b{background:#4ade80}.dot.c{background:#facc15}
+
+    .table-panel{padding:18px;overflow:auto}
+    table{width:100%;border-collapse:collapse;min-width:620px}
+    th,td{padding:11px 10px;border-bottom:1px solid var(--line);text-align:right;font-size:13px}
+    th:first-child,td:first-child{text-align:left}
+    th{color:var(--muted);font-weight:600}
+    td strong{font-size:15px}
+    .under{color:var(--green)} .overtext{color:var(--red)}
+
+    .note{
+      margin-top:18px;padding:15px 17px;border:1px dashed #394453;border-radius:16px;color:var(--muted);font-size:12px;line-height:1.7;
+    }
+    footer{margin-top:16px;text-align:center;color:#667281;font-size:11px;line-height:1.6}
+
+    @media(max-width:900px){
+      .properties{grid-template-columns:1fr}
+      .dash{grid-template-columns:1fr}
+      .global{grid-template-columns:1fr 1fr}
+      .global .panel:last-child{grid-column:1/-1}
+      .property{padding:16px}
+      canvas{height:300px}
+    }
+    @media(max-width:560px){
+      .app{padding:18px 12px 38px}
+      header{align-items:flex-start;flex-direction:column}
+      .tag{display:none}
+      .global{grid-template-columns:1fr}
+      .global .panel:last-child{grid-column:auto}
+      .usable{align-items:flex-start;flex-direction:column}
+      .usable .big{font-size:22px}
+      .fields{grid-template-columns:1fr 1fr}
+      .chart-panel,.table-panel{padding:14px}
+      canvas{height:260px}
+      .section-title{align-items:flex-start;flex-direction:column}
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div>
+      <h1>🏠 신혼집 주거비 비교 계산기</h1>
+      <p class="lead">전세 · 반전세 · 월세 매물을 A/B/C로 저장해서 월 지출과 금리 민감도를 한 번에 비교합니다.</p>
+    </div>
+    <div class="tag">100% 브라우저 계산 · 서버 전송 없음</div>
+  </header>
+
+  <section class="global">
+    <div class="panel">
+      <div class="label">총 가용 현금</div>
+      <div class="money-input"><input id="cash" type="number" value="15000" min="0" step="500"><span>만원</span></div>
+    </div>
+    <div class="panel">
+      <div class="label">남겨둘 비상자금</div>
+      <div class="money-input"><input id="reserve" type="number" value="1500" min="0" step="500"><span>만원</span></div>
+    </div>
+    <div class="panel">
+      <div class="label">월 주거비 한도</div>
+      <div class="money-input"><input id="budget" type="number" value="180" min="0" step="10"><span>만원</span></div>
+    </div>
+  </section>
+
+  <section class="panel usable">
+    <div>
+      <div class="label">실제 보증금에 투입 가능한 현금</div>
+      <div class="desc">총 가용 현금에서 비상자금을 제외합니다. 모든 매물을 같은 조건으로 비교합니다.</div>
+    </div>
+    <div class="big" id="usableCash">13,500만원</div>
+  </section>
+
+  <div class="section-title">
+    <h2>매물 A / B / C 비교</h2>
+    <p>유형 버튼을 누르면 대표값이 자동 입력되고, 숫자는 자유롭게 수정할 수 있습니다.</p>
+  </div>
+
+  <section class="properties" id="properties"></section>
+
+  <div class="section-title">
+    <h2>비교 결과</h2>
+    <p>총 월 주거비 = 월세 + 보증금 대출 월 이자</p>
+  </div>
+
+  <section class="dash">
+    <div class="panel chart-panel">
+      <div class="chart-head">
+        <div>
+          <h3>매물별 월 주거비</h3>
+          <p>현재 입력값 기준. 점선은 설정한 월 예산입니다.</p>
+        </div>
+      </div>
+      <canvas id="barChart"></canvas>
+      <div class="legend"><span><i class="dot a"></i>매물 A</span><span><i class="dot b"></i>매물 B</span><span><i class="dot c"></i>매물 C</span></div>
+    </div>
+
+    <div class="panel chart-panel">
+      <div class="chart-head">
+        <div>
+          <h3>금리 변화 민감도</h3>
+          <p>연 2.0% ~ 7.0%에서 각 매물의 월 주거비를 비교합니다.</p>
+        </div>
+      </div>
+      <canvas id="lineChart"></canvas>
+      <div class="legend"><span><i class="dot a"></i>매물 A</span><span><i class="dot b"></i>매물 B</span><span><i class="dot c"></i>매물 C</span></div>
+    </div>
+  </section>
+
+  <section class="panel table-panel" style="margin-top:14px">
+    <table>
+      <thead>
+        <tr>
+          <th>매물</th><th>유형</th><th>보증금</th><th>월세</th><th>필요 대출</th><th>월 이자</th><th>총 월비용</th><th>예산 차이</th>
+        </tr>
+      </thead>
+      <tbody id="summaryBody"></tbody>
+    </table>
+  </section>
+
+  <div class="note">
+    <b style="color:#e6edf3">계산 기준</b><br>
+    필요 대출 = max(보증금 − 실제 투입 가능 현금, 0)<br>
+    월 대출이자 = 필요 대출 × 연 금리 ÷ 12<br>
+    총 월 주거비 = 월 대출이자 + 월세<br><br>
+    ※ 단순 의사결정용 계산기입니다. 실제 전세대출 한도, 보증기관(HF/HUG/SGI) 심사, 보증료, 중개보수, 관리비, 원금상환, 세금은 포함하지 않습니다.
+  </div>
+
+  <footer>Static web app · GitHub Pages / Netlify / Cloudflare Pages에 무료 배포 가능</footer>
+</div>
+
+<script>
+const COLORS = ['#72b7ff','#4ade80','#facc15'];
+const presets = {
+  jeonse:   {label:'전세', deposit:50000, rent:0,   rate:4.3},
+  semi:     {label:'반전세', deposit:40000, rent:80, rate:4.3},
+  monthly:  {label:'월세', deposit:10000, rent:150, rate:4.3}
+};
+
+let props = [
+  {name:'매물 A', type:'jeonse', deposit:50000, rent:0, rate:4.3},
+  {name:'매물 B', type:'semi', deposit:40000, rent:80, rate:4.3},
+  {name:'매물 C', type:'monthly', deposit:10000, rent:150, rate:4.3}
+];
+
+const $ = s => document.querySelector(s);
+const fmt = (n,d=0) => Number(n).toLocaleString('ko-KR',{maximumFractionDigits:d,minimumFractionDigits:d});
+const usableCash = () => Math.max(Number($('#cash').value||0)-Number($('#reserve').value||0),0);
+const budget = () => Math.max(Number($('#budget').value||0),0);
+
+function calc(p, rateOverride=null){
+  const cash = usableCash();
+  const loan = Math.max(Number(p.deposit)-cash,0);
+  const r = rateOverride===null ? Number(p.rate) : Number(rateOverride);
+  const interest = loan*(r/100)/12;
+  const total = interest + Number(p.rent);
+  return {loan,interest,total};
+}
+
+function renderCards(){
+  const root = $('#properties');
+  root.innerHTML = '';
+  props.forEach((p,i)=>{
+    const c = calc(p);
+    const ok = c.total <= budget();
+    const card = document.createElement('article');
+    card.className='panel property';
+    card.dataset.index=i;
+    card.innerHTML = `
+      <div class="best-badge">LOWEST</div>
+      <div class="prop-top">
+        <input class="prop-name" value="${p.name}" data-key="name" aria-label="매물 이름">
+        <span class="status ${ok?'ok':'over'}">${ok?'예산 이내':'예산 초과'}</span>
+      </div>
+      <div class="mode">
+        <button data-type="jeonse" class="${p.type==='jeonse'?'active':''}">전세</button>
+        <button data-type="semi" class="${p.type==='semi'?'active':''}">반전세</button>
+        <button data-type="monthly" class="${p.type==='monthly'?'active':''}">월세</button>
+      </div>
+      <div class="fields">
+        <div class="field">
+          <label>보증금</label>
+          <div class="money-input"><input type="number" data-key="deposit" value="${p.deposit}" min="0" step="500"><span>만원</span></div>
+        </div>
+        <div class="field">
+          <label>월세</label>
+          <div class="money-input"><input type="number" data-key="rent" value="${p.rent}" min="0" step="5"><span>만원</span></div>
+        </div>
+        <div class="field" style="grid-column:1/-1">
+          <label>대출 금리</label>
+          <div class="rate-input"><input type="number" data-key="rate" value="${p.rate}" min="0" max="20" step="0.1"><span>%</span></div>
+        </div>
+      </div>
+      <div class="calc-box">
+        <div class="metric"><div class="m-label">필요 대출</div><div class="m-value">${fmt(c.loan)}만원</div></div>
+        <div class="metric"><div class="m-label">월 대출이자</div><div class="m-value">${fmt(c.interest,1)}만원</div></div>
+        <div class="metric total">
+          <div><div class="m-label">총 월 주거비</div><div class="m-value ${ok?'ok':'over'}">${fmt(c.total,1)}만원</div></div>
+          <div class="${ok?'under':'overtext'}" style="font-size:12px;font-weight:700">${ok?`예산보다 ${fmt(budget()-c.total,1)}만↓`:`예산보다 ${fmt(c.total-budget(),1)}만↑`}</div>
+        </div>
+      </div>
+      <div class="budgetbar"><div style="width:${Math.min(c.total/Math.max(budget(),1)*100,100)}%"></div></div>
+    `;
+    root.appendChild(card);
+  });
+
+  root.querySelectorAll('.property').forEach(card=>{
+    const i=Number(card.dataset.index);
+    card.querySelectorAll('input').forEach(inp=>{
+      inp.addEventListener('input',()=>{
+        const key=inp.dataset.key;
+        props[i][key] = key==='name' ? inp.value : Number(inp.value||0);
+        updateAll(false);
+      });
+    });
+    card.querySelectorAll('.mode button').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        const type=btn.dataset.type;
+        const pr=presets[type];
+        props[i].type=type;
+        props[i].deposit=pr.deposit;
+        props[i].rent=pr.rent;
+        props[i].rate=pr.rate;
+        updateAll(true);
+      });
+    });
+  });
+}
+
+function renderSummary(){
+  const body=$('#summaryBody');
+  body.innerHTML='';
+  props.forEach(p=>{
+    const c=calc(p);
+    const diff=budget()-c.total;
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td><strong>${escapeHtml(p.name)}</strong></td>
+      <td>${presets[p.type].label}</td>
+      <td>${fmt(p.deposit)}만</td>
+      <td>${fmt(p.rent)}만</td>
+      <td>${fmt(c.loan)}만</td>
+      <td>${fmt(c.interest,1)}만</td>
+      <td><strong>${fmt(c.total,1)}만</strong></td>
+      <td class="${diff>=0?'under':'overtext'}">${diff>=0?'+':''}${fmt(diff,1)}만</td>
+    `;
+    body.appendChild(tr);
+  });
+}
+
+function markBest(){
+  const cards=[...document.querySelectorAll('.property')];
+  cards.forEach(c=>c.classList.remove('best'));
+  const vals=props.map(p=>calc(p).total);
+  const min=Math.min(...vals);
+  vals.forEach((v,i)=>{ if(Math.abs(v-min)<0.0001) cards[i]?.classList.add('best'); });
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[m]));
+}
+
+function setupCanvas(canvas){
+  const dpr=window.devicePixelRatio||1;
+  const w=canvas.clientWidth,h=canvas.clientHeight;
+  canvas.width=Math.round(w*dpr); canvas.height=Math.round(h*dpr);
+  const ctx=canvas.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  return {ctx,w,h};
+}
+
+function drawBar(){
+  const cv=$('#barChart'); const {ctx,w,h}=setupCanvas(cv);
+  ctx.clearRect(0,0,w,h);
+  const pad={l:46,r:16,t:20,b:42}; const pw=w-pad.l-pad.r, ph=h-pad.t-pad.b;
+  const vals=props.map(p=>calc(p).total);
+  const max=Math.max(budget()*1.2,...vals,50)*1.08;
+  const sy=y=>pad.t+ph-(y/max)*ph;
+
+  ctx.font='11px -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif';
+  ctx.strokeStyle='#26303b';ctx.fillStyle='#8f9aaa';ctx.textAlign='right';ctx.textBaseline='middle';
+  for(let i=0;i<=4;i++){
+    const v=max*i/4, y=sy(v);
+    ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(w-pad.r,y);ctx.stroke();
+    ctx.fillText(`${Math.round(v)}만`,pad.l-7,y);
+  }
+  if(budget()<=max){
+    ctx.strokeStyle='#fb7185';ctx.setLineDash([6,5]);
+    ctx.beginPath();ctx.moveTo(pad.l,sy(budget()));ctx.lineTo(w-pad.r,sy(budget()));ctx.stroke();ctx.setLineDash([]);
+  }
+  const gap=pw/props.length, bw=Math.min(70,gap*.52);
+  props.forEach((p,i)=>{
+    const x=pad.l+gap*i+gap/2-bw/2, y=sy(vals[i]);
+    ctx.fillStyle=COLORS[i];
+    roundRect(ctx,x,y,bw,pad.t+ph-y,9);ctx.fill();
+    ctx.fillStyle='#cfd6df';ctx.textAlign='center';ctx.textBaseline='bottom';
+    ctx.fillText(`${fmt(vals[i],1)}만`,x+bw/2,y-6);
+    ctx.fillStyle='#9aa6b3';ctx.textBaseline='top';
+    ctx.fillText(p.name,x+bw/2,h-pad.b+10);
+  });
+}
+
+function drawLine(){
+  const cv=$('#lineChart'); const {ctx,w,h}=setupCanvas(cv);
+  ctx.clearRect(0,0,w,h);
+  const pad={l:46,r:16,t:20,b:42}; const pw=w-pad.l-pad.r, ph=h-pad.t-pad.b;
+  const rates=[]; for(let r=2;r<=7.001;r+=.25) rates.push(Number(r.toFixed(2)));
+  const series=props.map(p=>rates.map(r=>calc(p,r).total));
+  const max=Math.max(budget()*1.2,...series.flat(),50)*1.08;
+  const sx=r=>pad.l+(r-2)/(7-2)*pw, sy=y=>pad.t+ph-(y/max)*ph;
+
+  ctx.font='11px -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif';
+  ctx.strokeStyle='#26303b';ctx.fillStyle='#8f9aaa';ctx.textAlign='right';ctx.textBaseline='middle';
+  for(let i=0;i<=4;i++){
+    const v=max*i/4,y=sy(v);
+    ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(w-pad.r,y);ctx.stroke();
+    ctx.fillText(`${Math.round(v)}만`,pad.l-7,y);
+  }
+  [2,3,4,5,6,7].forEach(r=>{
+    ctx.fillStyle='#8f9aaa';ctx.textAlign='center';ctx.textBaseline='top';
+    ctx.fillText(`${r}%`,sx(r),h-pad.b+10);
+  });
+  if(budget()<=max){
+    ctx.strokeStyle='#fb7185';ctx.setLineDash([6,5]);
+    ctx.beginPath();ctx.moveTo(pad.l,sy(budget()));ctx.lineTo(w-pad.r,sy(budget()));ctx.stroke();ctx.setLineDash([]);
+  }
+
+  series.forEach((arr,i)=>{
+    ctx.strokeStyle=COLORS[i];ctx.lineWidth=2.6;ctx.beginPath();
+    arr.forEach((v,j)=>j?ctx.lineTo(sx(rates[j]),sy(v)):ctx.moveTo(sx(rates[j]),sy(v)));
+    ctx.stroke();
+
+    const currentRate=Math.min(7,Math.max(2,Number(props[i].rate)));
+    const current=calc(props[i],currentRate).total;
+    ctx.fillStyle=COLORS[i];ctx.beginPath();ctx.arc(sx(currentRate),sy(current),4.2,0,Math.PI*2);ctx.fill();
+  });
+}
+
+function roundRect(ctx,x,y,w,h,r){
+  r=Math.min(r,w/2,h/2);
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();
+}
+
+function updateUsable(){
+  $('#usableCash').textContent=`${fmt(usableCash())}만원`;
+}
+
+function updateAll(rebuildCards=true){
+  updateUsable();
+  if(rebuildCards) renderCards();
+  else {
+    // Refresh calculated displays without replacing focused inputs
+    document.querySelectorAll('.property').forEach((card,i)=>{
+      const c=calc(props[i]), ok=c.total<=budget();
+      const status=card.querySelector('.status');
+      status.textContent=ok?'예산 이내':'예산 초과';
+      status.className=`status ${ok?'ok':'over'}`;
+      const metrics=card.querySelectorAll('.m-value');
+      metrics[0].textContent=`${fmt(c.loan)}만원`;
+      metrics[1].textContent=`${fmt(c.interest,1)}만원`;
+      metrics[2].textContent=`${fmt(c.total,1)}만원`;
+      metrics[2].className=`m-value ${ok?'ok':'over'}`;
+      const diff=card.querySelector('.metric.total > div:last-child');
+      diff.className=ok?'under':'overtext';
+      diff.style.cssText='font-size:12px;font-weight:700';
+      diff.textContent=ok?`예산보다 ${fmt(budget()-c.total,1)}만↓`:`예산보다 ${fmt(c.total-budget(),1)}만↑`;
+      card.querySelector('.budgetbar>div').style.width=`${Math.min(c.total/Math.max(budget(),1)*100,100)}%`;
+    });
+  }
+  renderSummary(); markBest(); drawBar(); drawLine();
+  saveState();
+}
+
+function saveState(){
+  try{
+    localStorage.setItem('housingCalcState',JSON.stringify({
+      cash:Number($('#cash').value||0),
+      reserve:Number($('#reserve').value||0),
+      budget:Number($('#budget').value||0),
+      props
+    }));
+  }catch(e){}
+}
+function loadState(){
+  try{
+    const s=JSON.parse(localStorage.getItem('housingCalcState')||'null');
+    if(!s) return;
+    $('#cash').value=s.cash??15000; $('#reserve').value=s.reserve??1500; $('#budget').value=s.budget??180;
+    if(Array.isArray(s.props)&&s.props.length===3) props=s.props;
+  }catch(e){}
+}
+
+['cash','reserve','budget'].forEach(id=>{
+  document.getElementById(id).addEventListener('input',()=>updateAll(true));
+});
+window.addEventListener('resize',()=>{drawBar();drawLine()});
+
+loadState();
+updateAll(true);
+</script>
+</body>
+</html>
