@@ -94,6 +94,25 @@
     .fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}
     .field label{display:block;font-size:11px;color:var(--muted);margin:0 0 6px}
     .field .money-input input,.field .rate-input input{font-size:15px;font-weight:650;padding:8px 0}
+    .range-wrap{margin-top:8px;padding:0 2px}
+    .range-input{
+      width:100%;height:22px;margin:0;appearance:none;-webkit-appearance:none;background:transparent;cursor:pointer;
+    }
+    .range-input::-webkit-slider-runnable-track{
+      height:6px;border-radius:999px;background:linear-gradient(90deg,#364150,#59697d);border:1px solid #465365;
+    }
+    .range-input::-webkit-slider-thumb{
+      -webkit-appearance:none;appearance:none;width:18px;height:18px;border-radius:50%;background:var(--blue);
+      border:3px solid #dbeafe;margin-top:-7px;box-shadow:0 0 0 3px rgba(114,183,255,.16);
+    }
+    .range-input::-moz-range-track{
+      height:6px;border-radius:999px;background:linear-gradient(90deg,#364150,#59697d);border:1px solid #465365;
+    }
+    .range-input::-moz-range-thumb{
+      width:14px;height:14px;border-radius:50%;background:var(--blue);border:3px solid #dbeafe;
+      box-shadow:0 0 0 3px rgba(114,183,255,.16);
+    }
+    .range-scale{display:flex;justify-content:space-between;margin-top:1px;color:#687586;font-size:9px}
     .calc-box{
       margin-top:14px;background:#0b1016;border:1px solid var(--line);border-radius:14px;padding:13px;
       display:grid;grid-template-columns:1fr 1fr;gap:10px;
@@ -297,15 +316,27 @@ function renderCards(){
       <div class="fields">
         <div class="field">
           <label>보증금</label>
-          <div class="money-input"><input type="number" data-key="deposit" value="${p.deposit}" min="0" step="500"><span>만원</span></div>
+          <div class="money-input"><input type="number" data-key="deposit" value="${p.deposit}" min="0" max="150000" step="500"><span>만원</span></div>
+          <div class="range-wrap">
+            <input class="range-input" type="range" data-key="deposit" value="${p.deposit}" min="0" max="150000" step="500" aria-label="보증금 슬라이더">
+            <div class="range-scale"><span>0</span><span>15억</span></div>
+          </div>
         </div>
         <div class="field">
           <label>월세</label>
-          <div class="money-input"><input type="number" data-key="rent" value="${p.rent}" min="0" step="5"><span>만원</span></div>
+          <div class="money-input"><input type="number" data-key="rent" value="${p.rent}" min="0" max="500" step="5"><span>만원</span></div>
+          <div class="range-wrap">
+            <input class="range-input" type="range" data-key="rent" value="${p.rent}" min="0" max="500" step="5" aria-label="월세 슬라이더">
+            <div class="range-scale"><span>0</span><span>500만</span></div>
+          </div>
         </div>
         <div class="field" style="grid-column:1/-1">
           <label>대출 금리</label>
-          <div class="rate-input"><input type="number" data-key="rate" value="${p.rate}" min="0" max="20" step="0.1"><span>%</span></div>
+          <div class="rate-input"><input type="number" data-key="rate" value="${p.rate}" min="0" max="10" step="0.1"><span>%</span></div>
+          <div class="range-wrap">
+            <input class="range-input" type="range" data-key="rate" value="${p.rate}" min="0" max="10" step="0.1" aria-label="대출 금리 슬라이더">
+            <div class="range-scale"><span>0%</span><span>10%</span></div>
+          </div>
         </div>
       </div>
       <div class="calc-box">
@@ -326,7 +357,16 @@ function renderCards(){
     card.querySelectorAll('input').forEach(inp=>{
       inp.addEventListener('input',()=>{
         const key=inp.dataset.key;
-        props[i][key] = key==='name' ? inp.value : Number(inp.value||0);
+        if(key==='name'){
+          props[i][key]=inp.value;
+        }else{
+          const value=Number(inp.value||0);
+          props[i][key]=value;
+          // 같은 항목의 숫자 입력창과 슬라이더를 항상 같은 값으로 맞춥니다.
+          card.querySelectorAll(`input[data-key="${key}"]`).forEach(other=>{
+            if(other!==inp) other.value=value;
+          });
+        }
         updateAll(false);
       });
     });
